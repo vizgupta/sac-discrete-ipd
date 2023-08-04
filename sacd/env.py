@@ -5,8 +5,8 @@ from collections import deque
 import numpy as np
 import gym
 from gym import spaces, wrappers
-import cv2
-cv2.ocl.setUseOpenCL(False)
+# import cv2
+# cv2.ocl.setUseOpenCL(False)
 
 
 class NoopResetEnv(gym.Wrapper):
@@ -277,6 +277,49 @@ def make_atari(env_id):
     env = MaxAndSkipEnv(env, skip=4)
     return env
 
+from gym import spaces
+class IPDEnv(gym.Env):
+  """Custom Environment that follows gym interface"""
+  metadata = {'render.modes': ['human']}
+
+  def __init__(self, ep_length=50):
+    super(IPDEnv, self).__init__()
+    self.action_space = spaces.Discrete(2)
+    # Example for using image as input:
+    self.curr_t = 0
+    self.ep_length = 50
+    self.observation_space = spaces.MultiBinary(n=5)
+  def seed(self, x):
+    pass
+  def step(self, action):
+    state = action[0] * 2 + action[1]  # CC=0, CD=1, DC=2, DD=3
+    self.curr_t += 1 
+    # calculate rewards
+    player1_rewards = np.array([-1., -3., 0, -2.])
+    player2_rewards = np.array([-1., 0., -3, -2.])
+    r1 = player1_rewards[state]
+    r2 = player2_rewards[state]
+    rewards = np.hstack([r1, r2])
+
+    # calculate observation shape: [4x1] = [player1_cooperated, player1_defected, player2_cooperated, player2_defected]
+    observation = np.hstack([0, 
+                             (action[0] == 0) & (action[1] == 0), 
+                             (action[0] == 0) & (action[1] == 1), 
+                             (action[0] == 1) & (action[1] == 0), 
+                             (action[0] == 1) & (action[1] == 1)])
+    observation = observation.astype(np.float32)
+
+    return observation, rewards, self.curr_t == self.ep_length -1, []
+
+    # Execute one time step within the environment
+    ...
+  def reset(self):
+    self.curr_t = 0
+    return np.array([1, 0, 0, 0, 0]) 
+    # Reset the state of the environment to an initial state
+
+  def render(self, mode='human', close=False):
+    pass
 
 def wrap_deepmind_pytorch(env, episode_life=True, clip_rewards=True,
                           frame_stack=True, scale=False):

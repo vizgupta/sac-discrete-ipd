@@ -3,7 +3,7 @@ import yaml
 import argparse
 from datetime import datetime
 
-from sacd.env import make_pytorch_env
+from sacd.env import make_pytorch_env, IPDEnv
 from sacd.agent import SacdAgent, SharedSacdAgent
 
 
@@ -12,9 +12,11 @@ def run(args):
         config = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Create environments.
-    env = make_pytorch_env(args.env_id, clip_rewards=False)
-    test_env = make_pytorch_env(
-        args.env_id, episode_life=False, clip_rewards=False)
+    # env = make_pytorch_env(args.env_id, clip_rewards=False)
+    # test_env = make_pytorch_env(
+        # args.env_id, episode_life=False, clip_rewards=False)
+    env = IPDEnv()
+    test_env = IPDEnv()
 
     # Specify the directory to log.
     name = args.config.split('/')[-1].rstrip('.yaml')
